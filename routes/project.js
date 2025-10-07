@@ -187,4 +187,45 @@ router.post(
   }
 );
 
+router.post(
+  "/rename-folder",
+  authenticateApiKey,
+  async (req, res) => {
+    try {
+      const { Client, projectName, oldClient, oldProjectName } = req.body;
+
+      if (!Client || !projectName) {
+        return res.status(400).json({ message: "Missing Client or projectName" });
+      }
+
+      const baseDir = path.join(process.cwd(), "uploads", "projects");
+      const effectiveOldClient = oldClient || Client;
+      const effectiveOldProjectName = oldProjectName || projectName;
+      const oldFolder = path.join(baseDir, effectiveOldClient, effectiveOldProjectName);
+      const newFolder = path.join(baseDir, Client, projectName);
+
+      if (oldFolder !== newFolder) {
+        if (!fs.existsSync(oldFolder)) {
+          return res.status(404).json({ message: "Old folder not found" });
+        }
+
+        if (fs.existsSync(newFolder)) {
+          return res.status(409).json({ message: "New folder already exists" });
+        }
+
+        fs.renameSync(oldFolder, newFolder);
+      }
+
+      res.status(200).json({
+        message: "Folder renamed successfully",
+        Client,
+        projectName,
+      });
+    } catch (err) {
+      console.error("Rename error:", err);
+      res.status(500).json({ message: "Server error during folder rename", details: err.message });
+    }
+  }
+);
+
 export default router;

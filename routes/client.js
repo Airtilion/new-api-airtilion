@@ -78,7 +78,7 @@ router.post(
   }
 );
 
-router.post("/client/update", authenticateApiKey,
+router.post("/update", authenticateApiKey,
   
   upload.fields([
     { name: "logo", maxCount: 1 },

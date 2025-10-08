@@ -78,4 +78,69 @@ router.post(
   }
 );
 
+router.post("/client/update", authenticateApiKey,
+  
+  upload.fields([
+    { name: "logo", maxCount: 1 },
+    { name: "background", maxCount: 1 },
+    { name: "icon", maxCount: 1 },
+  ]),
+
+  async (req, res) => {
+    try {
+      const { Client, oldLogo, oldBackground, oldIcon } = req.body;
+
+      if (!Client) {
+        return res.status(400).json({ message: "Missing Client" });
+      }
+
+      const baseDir = path.join(process.cwd(), "uploads", "clients");
+      const folder = path.join(baseDir, Client);
+
+      // Zakładamy, że folder już istnieje lub Multer go stworzył
+      if (!fs.existsSync(folder)) {
+        fs.mkdirSync(folder, { recursive: true });
+      }
+
+      // Usuń stare pliki, jeśli podane (zastępowane)
+      const deleteOldFile = (folder, oldFileName) => {
+        if (oldFileName) {
+          oldFileName = path.basename(oldFileName);
+          const oldPath = path.join(folder, oldFileName);
+          console.log(`Trying to delete old file: ${oldPath}`); 
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+            console.log(`Deleted: ${oldPath}`);
+          } else {
+            console.log(`File not found, skipped: ${oldPath}`);
+          }
+        }
+      };
+
+      deleteOldFile(folder, oldLogo);
+      deleteOldFile(folder, oldBackground);
+      deleteOldFile(folder, oldIcon);
+
+      const basePath = path.join("uploads", "clients", Client);
+
+      const logo = req.files.logo ? path.join(basePath, req.files.logo[0].filename) : null;
+      const background = req.files.background ? path.join(basePath, req.files.background[0].filename) : null;
+      const icon = req.files.icon ? path.join(basePath, req.files.icon[0].filename) : null;
+
+      res.status(200).json({
+        message: "Files updated successfully",
+        Client,
+        files: {
+          logo,
+          background,
+          icon,
+        },
+      });
+    } catch (err) {
+      console.error("Update error:", err);
+      res.status(500).json({ message: "Server error during file update", details: err.message });
+    }
+  }
+);
+
 export default router;

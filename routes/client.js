@@ -15,7 +15,16 @@ const storage = multer.diskStorage({
     if (!user && !Client) {
       return cb(new Error('Missing user data'), false);
     }
-    const clientFolder = path.join(process.cwd(), "uploads", "clients", user);
+
+    let clientFolder
+
+    if(!user){
+      clientFolder = path.join(process.cwd(), "uploads", "clients", Client);
+    }
+    else if(!Client){
+      clientFolder = path.join(process.cwd(), "uploads", "clients", user);
+    }
+    
     if (!fs.existsSync(clientFolder)) {
       fs.mkdirSync(clientFolder, { recursive: true });
     }

@@ -11,8 +11,8 @@ const router = Router();
 // multer storage config
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const { user } = req.body;
-    if (!user) {
+    const { user, Client } = req.body;
+    if (!user && !Client) {
       return cb(new Error('Missing user data'), false);
     }
     const clientFolder = path.join(process.cwd(), "uploads", "clients", user);
